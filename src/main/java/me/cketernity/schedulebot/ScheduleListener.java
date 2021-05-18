@@ -16,35 +16,40 @@ public class ScheduleListener extends ListenerAdapter {
 	
 	@Override
 	public void onGuildMessageReceived(GuildMessageReceivedEvent event) {
-		String msg = event.getMessage().getContentRaw();
-		
-		//Remind command, syntax "!remind MM/DD/YYYY HH:MM, [message]"
-		if(msg.length() > App.prefix.length() + 8 && msg.substring(0, App.prefix.length() + 7).equalsIgnoreCase(App.prefix + "remind ")) {
-			String[] split = msg.substring(App.prefix.length() + 7).split(", ", 2);
-			String[] splitDateTime = split[0].split(" ");
+		try {
+			String msg = event.getMessage().getContentRaw();
 			
-			String[] splitDate = splitDateTime[0].split("/");
-			int[] date = new int[splitDate.length];
-			
-			for(int i = 0; i < splitDate.length; i++) {
-				date[i] = Integer.parseInt(splitDate[i]);
+			//Remind command, syntax "!remind MM/DD/YYYY HH:MM, [message]"
+			if(msg.length() > App.prefix.length() + 8 && msg.substring(0, App.prefix.length() + 7).equalsIgnoreCase(App.prefix + "remind ")) {
+				String[] split = msg.substring(App.prefix.length() + 7).split(", ", 2);
+				String[] splitDateTime = split[0].split(" ");
+				
+				String[] splitDate = splitDateTime[0].split("/");
+				int[] date = new int[splitDate.length];
+				
+				for(int i = 0; i < splitDate.length; i++) {
+					date[i] = Integer.parseInt(splitDate[i]);
+				}
+				
+				String[] splitTime = splitDateTime[1].split(":");
+				int[] time = new int[splitTime.length];
+				
+				for(int i = 0; i < splitTime.length; i++) {
+					time[i] = Integer.parseInt(splitTime[i]);
+				}
+				
+				Event e = new Event(Long.parseLong(event.getChannel().getId()), split[1], new Date(date[0], date[1], date[2], time[0], time[1]), true);
+				event.getMessage().addReaction("✅").queue();
+				
+				try {
+					e.addEvent();
+				} catch (IOException exception) {
+					exception.printStackTrace();
+				}
 			}
-			
-			String[] splitTime = splitDateTime[1].split(":");
-			int[] time = new int[splitTime.length];
-			
-			for(int i = 0; i < splitTime.length; i++) {
-				time[i] = Integer.parseInt(splitTime[i]);
-			}
-			
-			Event e = new Event(Long.parseLong(event.getChannel().getId()), split[1], new Date(date[0], date[1], date[2], time[0], time[1]), true);
-			event.getMessage().addReaction("✔️").queue();
-			
-			try {
-				e.addEvent();
-			} catch (IOException exception) {
-				exception.printStackTrace();
-			}
+		} catch (Exception e) {
+			event.getMessage().addReaction("❌").queue();
+			event.getMessage().reply("Something went wrong, did you use the proper syntax? !remind MM/DD/YYY HH:MM, [message]").queue();
 		}
 	}
 	
